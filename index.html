@@ -1,116 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Story Polisher & Voice Challenge App</title>
-  <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #f9f9ff, #eef1ff);
-      text-align: center;
-      padding: 20px;
-    }
-    h1 {
-      color: #5b3eff;
-      text-shadow: 1px 1px #ccc;
-    }
-    textarea {
-      width: 90%;
-      height: 200px;
-      margin-top: 10px;
-      border: 2px solid #d0d0ff;
-      border-radius: 12px;
-      padding: 10px;
-      font-size: 16px;
-      resize: none;
-      background: #fff;
-    }
-    button {
-      margin: 10px 5px;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 10px;
-      background: #5b3eff;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    button:hover {
-      background: #3e28cc;
-      transform: scale(1.05);
-    }
-    #output {
-      width: 90%;
-      margin: 20px auto;
-      background: #fff;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #ccc;
-      text-align: left;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Story Polisher Ultimate 🌈</title>
+<style>
+  :root {
+    --bg1:#8f6aff; --bg2:#66d0ff; --bg3:#f6b0ff;
+    --text:#111; --card:#fff; --accent:#5b3eff;
+  }
+  body.dark {
+    --bg1:#1e1e2a; --bg2:#2a1e3d; --bg3:#3d2a6d;
+    --text:#f9f9f9; --card:#2b2b3c; --accent:#9b7bff;
+  }
+
+  body{
+    font-family:Poppins, sans-serif;
+    background:linear-gradient(135deg,var(--bg1),var(--bg2),var(--bg3));
+    background-size:400% 400%;
+    animation:gradient 10s ease infinite;
+    text-align:center;padding:20px;color:var(--text);
+    transition:.5s;
+  }
+  @keyframes gradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+  h1{text-shadow:1px 1px rgba(0,0,0,.3);color:var(--text);}
+  textarea{
+    width:90%;height:200px;margin-top:10px;border:2px solid var(--accent);
+    border-radius:12px;padding:10px;font-size:16px;resize:none;background:var(--card);color:var(--text);
+  }
+  button{
+    margin:8px 4px;padding:10px 18px;border:none;border-radius:10px;
+    background:var(--accent);color:#fff;font-size:15px;cursor:pointer;transition:.2s;
+  }
+  button:hover{transform:scale(1.07);}
+  #micButton{background:radial-gradient(circle,#a389ff 20%,var(--accent) 90%);box-shadow:0 0 20px rgba(91,62,255,.5);}
+  #micButton.glow{box-shadow:0 0 40px #a389ff;}
+  #output{
+    width:90%;margin:20px auto;background:var(--card);
+    padding:15px;border-radius:10px;box-shadow:0 0 10px #0002;text-align:left;
+  }
+  #wordCount{margin-top:10px;font-weight:bold;}
+  #modeToggle{position:fixed;top:10px;right:15px;background:var(--accent);}
+</style>
 </head>
 <body>
-  <h1>🎙 Story Polisher + Writing Challenge 🌈</h1>
+<h1>🎙 Story Polisher Ultimate 🌈</h1>
+<button id="modeToggle" onclick="toggleMode()">🌙 Dark</button>
 
-  <textarea id="storyInput" placeholder="Type or speak your story here..."></textarea><br>
+<textarea id="storyInput" placeholder="Type or speak your story here..."></textarea><br>
 
-  <button onclick="startVoiceInput()">🎤 Speak Story</button>
-  <button onclick="polishStory()">🪄 Polish</button>
-  <button onclick="gradeStory()">📊 Grade</button>
-  <button onclick="challengeOfTheDay()">🌈 Daily Challenge</button>
-  <button onclick="explainGrade()">💬 Explain Grade</button>
-  <button onclick="compareMode()">🪞 Before/After</button>
+<button id="micButton" onclick="startVoiceInput()">🎤 Speak</button>
+<button onclick="polishStory()">🪄 Polish</button>
+<button onclick="gradeStory()">📊 Grade</button>
+<button onclick="explainGrade()">💬 Explain</button>
+<button onclick="compareMode()">🪞 Compare</button>
+<button onclick="moodMeter()">🧠 Mood</button>
+<button onclick="challengeOfTheDay()">🌈 Challenge</button>
+<button onclick="saveStory()">💾 Save</button>
+<button onclick="shareStory()">💬 Share</button>
 
-  <div id="output"></div>
+<div id="wordCount">Words: 0</div>
+<div id="output"></div>
 
-  <script>
-    let originalStory = "";
-    let polishedStory = "";
-    let lastGrade = "";
+<script>
+let originalStory="",polishedStory="",lastGrade="",xp=0,level=1;
 
-    // 🎙 Voice-to-Story Feature
-    function startVoiceInput() {
-      if (!('webkitSpeechRecognition' in window)) {
-        alert("Voice input not supported on this browser.");
-        return;
-      }
-      const recognition = new webkitSpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = "en-US";
+//🌙 toggle
+function toggleMode(){
+  document.body.classList.toggle('dark');
+  document.getElementById('modeToggle').textContent=
+    document.body.classList.contains('dark')?'☀️ Light':'🌙 Dark';
+}
 
-      document.getElementById('output').innerHTML = "<p>🎤 Listening... tell me your story!</p>";
-      recognition.start();
+//🎤 voice input
+function startVoiceInput(){
+  const mic=document.getElementById('micButton');
+  if(!('webkitSpeechRecognition' in window))return alert("Not supported.");
+  const rec=new webkitSpeechRecognition();
+  rec.lang="en-US"; rec.interimResults=false;
+  mic.classList.add('glow');
+  document.getElementById('output').innerHTML="<p>🎤 Listening...</p>";
+  rec.start();
+  rec.onresult=e=>{
+    const text=e.results[0][0].transcript;
+    document.getElementById('storyInput').value=text;
+    document.getElementById('output').innerHTML=`<p>📝 ${text}</p>`;
+    mic.classList.remove('glow');
+  };
+  rec.onerror=e=>{mic.classList.remove('glow');document.getElementById('output').innerHTML=`<p>⚠️ ${e.error}</p>`;}
+}
 
-      recognition.onresult = function(event) {
-        const transcript = event.results[0][0].transcript;
-        document.getElementById('storyInput').value = transcript;
-        document.getElementById('output').innerHTML = `<p>📝 Transcribed story:</p><p>${transcript}</p>`;
-      };
+//🪄 polish
+function polishStory(){
+  const s=document.getElementById('storyInput').value;
+  if(!s.trim())return alert("Write first!");
+  originalStory=s;
+  polishedStory=s.replace(/\bvery\b/g,"extremely").replace(/\bsaid\b/g,"remarked").replace(/\bhappy\b/g,"joyful");
+  document.getElementById('output').innerHTML=`<h3>✨ Polished:</h3><p>${polishedStory}</p>`;
+}
 
-      recognition.onerror = function(e) {
-        document.getElementById('output').innerHTML = `<p>⚠️ Error: ${e.error}</p>`;
-      };
-    }
+//📊 grade + XP
+function gradeStory(){
+  const s=document.getElementById('storyInput').value;
+  if(!s.trim())return alert("Write first!");
+  const score=Math.min(100,Math.floor(Math.random()*20+80));
+  const letter=score>90?"A":score>80?"B":"C";lastGrade=letter;
+  const words=s.split(/\s+/).length;
+  const gain=Math.floor(words/10)+(letter=="A"?20:letter=="B"?10:5);
+  xp+=gain;if(xp>=level*100){level++;alert(`🎉 Level up! Now ${level}`);}
+  document.getElementById('output').innerHTML=`<h3>Grade ${letter} (${score}/100)</h3><p>+${gain} XP | Total: ${xp} | Lv ${level}</p>`;
+}
 
-    // 🪄 Simple polish feature
-    function polishStory() {
-      const story = document.getElementById('storyInput').value;
-      if (!story.trim()) return alert("Write something first!");
-      originalStory = story;
-      polishedStory = story
-        .replace(/\bvery\b/g, "extremely")
-        .replace(/\bsaid\b/g, "remarked")
-        .replace(/\bmad\b/g, "furious");
-      document.getElementById('output').innerHTML = `<h3>Polished Story:</h3><p>${polishedStory}</p>`;
-    }
+//💬 explain
+function explainGrade(){
+  if(!lastGrade)return alert("Grade first!");
+  const exp={A:"Excellent creativity and grammar!",B:"Solid work, minor issues.",C:"Needs more detail and variety."};
+  document.getElementById('output').innerHTML=`<h3>Why ${lastGrade}</h3><p>${exp[lastGrade]}</p>`;
+}
 
-    // 📊 Fake grading system
-    function gradeStory() {
-      const story = document.getElementById('storyInput').value;
-      if (!story.trim()) return alert("Write something first!");
-      const scor
+//🪞 compare
+function compareMode(){
+  if(!polishedStory)return alert("Polish first!");
+  document.getElementById('output').innerHTML=
+  `<h3>Before / After</h3>
+   <div style="display:flex;gap:10px;">
+   <div style="flex:1;background:#eee;padding:10px;border-radius:10px;"><b>Before:</b><br>${originalStory}</div>
+   <div style="flex:1;background:#e8f9f3;padding:10px;border-radius:10px;"><b>After:</b><br>${polishedStory}</div>
+   </div>`;
+}
 
+//🧠 mood
+function moodMeter(){
+  const t=document.getElementById("storyInput").value.toLowerCase();
+  if(!t.trim())return alert("Write first!");
+  const moods={happy:["joy","smile","love","fun"],sad:["cry","tears","alone"],angry:["mad","rage","fight"],scary:["ghost","fear","dark"]};
+  let counts={happy:0,sad:0,angry:0,scary:0};
+  for(let m in moods)moods[m].forEach(w=>{const mth=t.match(new RegExp("\\b"+w+"\\b","g"));if(mth)counts[m]+=mth.length;});
+  let top=Object.keys(counts).reduce((a,b)=>counts[a]>counts[b]?a:b);
+  const em={happy:"😄",sad:"😢",angry:"😡",scary:"👻"}[top];
+  document.getElementById("output").innerHTML=`<h3>Mood ${em}</h3><p>${top.toUpperCase()}<br>${JSON.stringify(counts)}</p>`;
+}
+
+//🌈 challenge
+function challengeOfTheDay(){
+  const arr=[
+  "50-word story about a talking sandwich 🥪",
+  "Describe joy without 'happy' 🌞",
+  "Scary story ending 'It was only a dream.' 👻",
+  "Story where each sentence starts with same letter ✏️",
+  "Superhero afraid of water 💧"];
+  const r=arr[Math.floor(Math.random()*arr.length)];
+  document.getElementById("output").innerHTML=`<h3>🎯 Challenge</h3><p>${r}</p>`;
+}
+
+//💾 save / share
+function saveStory(){
+  const s=document.getElementById("storyInput").value;
+  if(!s.trim())return alert("Nothing to save!");
+  localStorage.setItem("savedStory",s);
+  alert("✅ Saved locally!");
+}
+function shareStory(){
+  const s=document.getElementById("storyInput").value;
+  if(!s.trim())return alert("Write first!");
+  navigator.clipboard.writeText(s).then(()=>alert("📋 Copied to clipboard!"));
+}
+
+//📈 word count
+const tA=document.getElementById("storyInput"),wc=document.getElementById("wordCount");
+tA.addEventListener("input",()=>{
+  const c=tA.value.trim()?tA.value.trim().split(/\s+/).length:0;
+  wc.textContent=`Words: ${c}`;
+});
+</script>
+</body>
+</html>
